@@ -24,9 +24,10 @@ anchors:
 ---
 """
 
-from proposal_normalizer import build_proposal
 from pathlib import Path
 import json
+
+from proposal_normalizer import build_proposal
 
 
 def build_blocked_proposal():
@@ -39,8 +40,9 @@ def build_blocked_proposal():
             {
                 "type": "financial_decision",
                 "amount": 2000000,
+                "currency": "USD",
                 "from": "Marketing",
-                "to": "Operations"
+                "to": "Operations",
             },
             indent=2,
         ),
@@ -56,7 +58,7 @@ def build_blocked_proposal():
     contract = {
         "id": "finance-raci",
         "version": "0.1.0",
-        "hash": "PLACEHOLDER_HASH"
+        "hash": "PLACEHOLDER_HASH",
     }
 
     actor = {
@@ -65,10 +67,20 @@ def build_blocked_proposal():
         "declared_role": "proposer",
     }
 
-    # ❌ VIOLATION HERE
+    # Blocked case: responsible and accountable collapse to the same identity.
     run_context = {
-        "responsible": "finance_manager",
-        "accountable": "finance_manager"
+        "identities": {
+            "proposer": "ai-system",
+            "responsible": "finance_manager",
+            "accountable": "finance_manager",
+        },
+        "integrity": {
+            "hashes_provided": True,
+        },
+        "publication": {
+            "channel": "internal",
+            "authorized": True,
+        },
     }
 
     return build_proposal(
