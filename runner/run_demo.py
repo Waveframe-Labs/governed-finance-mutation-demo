@@ -24,27 +24,36 @@ anchors:
 ---
 """
 
+import hashlib
 import json
-from pathlib import Path
 import shutil
 from datetime import datetime, timezone
+from pathlib import Path
 
-from cricore.enforcement.execution import run_enforcement_pipeline
 from compiler.compile_policy import compile_policy
+from cricore.enforcement.execution import run_enforcement_pipeline
 
-from scenarios.blocked import build_blocked_proposal
 from scenarios.allowed import build_allowed_proposal
+from scenarios.blocked import build_blocked_proposal
 
 
 BASE_RUN_PATH = Path("runs")
 
 
-def write_json(path: Path, data: dict):
+def write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
-def utc_now():
+def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as f:
+        for chunk in iter(lambda: f.read(8192), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def build_run(run_name: str, proposal_builder):
@@ -56,22 +65,19 @@ def build_run(run_name: str, proposal_builder):
 
     run_path.mkdir(parents=True)
 
-    # --- REQUIRED directory
     validation_path = run_path / "validation"
     validation_path.mkdir(exist_ok=True)
-
     write_json(validation_path / "structure.json", {"status": "placeholder"})
 
-    # --- Compile policy
-    policy = json.loads(Path("contracts/finance_policy.json").read_text())
+    policy = json.loads(
+        Path("contracts/finance_policy.json").read_text(encoding="utf-8")
+    )
     compiled_contract = compile_policy(policy)
 
-    # --- Build proposal
     proposal = proposal_builder()
 
     contract_hash = compiled_contract.get("contract_hash", "MISSING_HASH")
 
-    # --- CORRECT contract declaration
     contract_declaration = {
         "run_id": run_name,
         "contract_id": policy["contract_id"],
@@ -80,28 +86,42 @@ def build_run(run_name: str, proposal_builder):
         "created_utc": utc_now(),
     }
 
-    # Sync proposal contract reference
     proposal["contract"]["hash"] = contract_hash
 
-    # --- Write files
-    write_json(run_path / "contract.json", contract_declaration)
-    write_json(run_path / "compiled_contract.json", compiled_contract)
-    write_json(run_path / "proposal.json", proposal)
+    contract_path = run_path / "contract.json"
+    compiled_contract_path = run_path / "compiled_contract.json"
+    proposal_path = run_path / "proposal.json"
+    report_path = run_path / "report.md"
+    approval_path = run_path / "approval.json"
+    randomness_path = run_path / "randomness.json"
+    sha_path = run_path / "SHA256SUMS.txt"
 
-    (run_path / "report.md").write_text("# Demo Report\n", encoding="utf-8")
+    write_json(contract_path, contract_declaration)
+    write_json(compiled_contract_path, compiled_contract)
+    write_json(proposal_path, proposal)
 
-    write_json(run_path / "approval.json", {
-        "approved_by": "cfo",
-        "timestamp": utc_now()
-    })
+    report_path.write_text("# Demo Report\n", encoding="utf-8")
 
-    write_json(run_path / "randomness.json", {
-        "seed": 42
-    })
+    write_json(
+        approval_path,
+        {
+            "approved_by": "cfo",
+            "timestamp": utc_now(),
+        },
+    )
 
-    (run_path / "SHA256SUMS.txt").write_text(
-        "dummyhash contract.json\n",
-        encoding="utf-8"
+    write_json(
+        randomness_path,
+        {
+            "seed": 42,
+        },
+    )
+
+    contract_sha = sha256_file(contract_path)
+
+    sha_path.write_text(
+        f"{contract_sha} contract.json\n",
+        encoding="utf-8",
     )
 
     return run_path, proposal
@@ -113,7 +133,7 @@ def execute_run(run_name: str, proposal_builder):
 
     results, commit_allowed = run_enforcement_pipeline(
         run_path=str(run_path),
-        run_context=proposal.get("run_context", {})
+        run_context=proposal.get("run_context", {}),
     )
 
     print("\n" + "=" * 50)
