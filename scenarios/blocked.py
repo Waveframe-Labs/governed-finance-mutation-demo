@@ -4,7 +4,7 @@ title: "Blocked Finance Mutation Scenario"
 filetype: "source"
 type: "scenario"
 domain: "finance"
-version: "0.1.1"
+version: "0.1.0"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-03-19"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Blocked-Scenario-v0.1.1"
+  - "Finance-Mutation-Blocked-Scenario-v0.1.0"
 ---
 """
 
