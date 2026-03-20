@@ -103,8 +103,9 @@ def execute_run(run_name: str, proposal_builder):
     for r in results:
         status = "PASS" if r.passed else "FAIL"
         print(f"{r.stage_id}: {status}")
-        if not r.passed and r.reason:
-            print(f"  → {r.reason}")
+        if not r.passed:
+            reason = getattr(r, "reason", None) or getattr(r, "message", None) or "No reason provided"
+            print(f"  → {reason}")
 
     print("\nFINAL DECISION:")
     print("COMMIT ALLOWED" if commit_allowed else "COMMIT BLOCKED")
