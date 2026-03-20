@@ -7,7 +7,7 @@ domain: "finance"
 version: "0.1.0"
 status: "Active"
 created: "2026-03-19"
-updated: "2026-03-19"
+updated: "2026-03-20"
 
 author:
   name: "Shawn C. Wright"
@@ -67,12 +67,32 @@ def build_blocked_proposal():
         "declared_role": "proposer",
     }
 
-    # Blocked case: responsible and accountable collapse to the same identity.
+    # ❌ VIOLATION: same identity for responsible + accountable
     run_context = {
         "identities": {
-            "proposer": "ai-system",
-            "responsible": "finance_manager",
-            "accountable": "finance_manager",
+            "required_roles": [
+                "proposer",
+                "responsible",
+                "accountable",
+            ],
+            "actors": [
+                {
+                    "id": "ai-system",
+                    "type": "agent",
+                    "role": "proposer",
+                },
+                {
+                    "id": "finance_manager",
+                    "type": "human",
+                    "role": "responsible",
+                },
+                {
+                    "id": "finance_manager",  # ← VIOLATION
+                    "type": "human",
+                    "role": "accountable",
+                },
+            ],
+            "conflict_flags": {},
         },
         "integrity": {
             "hashes_provided": True,

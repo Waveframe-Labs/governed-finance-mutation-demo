@@ -7,7 +7,7 @@ domain: "finance"
 version: "0.1.0"
 status: "Active"
 created: "2026-03-19"
-updated: "2026-03-19"
+updated: "2026-03-20"
 
 author:
   name: "Shawn C. Wright"
@@ -67,12 +67,32 @@ def build_allowed_proposal():
         "declared_role": "proposer",
     }
 
-    # Allowed case: accountable is independently satisfied by the CFO.
+    # ✅ CORRECT STRUCTURAL MODEL (distinct identities)
     run_context = {
         "identities": {
-            "proposer": "ai-system",
-            "responsible": "finance_manager",
-            "accountable": "cfo",
+            "required_roles": [
+                "proposer",
+                "responsible",
+                "accountable",
+            ],
+            "actors": [
+                {
+                    "id": "ai-system",
+                    "type": "agent",
+                    "role": "proposer",
+                },
+                {
+                    "id": "finance_manager",
+                    "type": "human",
+                    "role": "responsible",
+                },
+                {
+                    "id": "cfo",
+                    "type": "human",
+                    "role": "accountable",
+                },
+            ],
+            "conflict_flags": {},
         },
         "integrity": {
             "hashes_provided": True,
