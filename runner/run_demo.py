@@ -51,6 +51,9 @@ def build_run(run_name: str, proposal_builder):
 
     run_path.mkdir(parents=True)
 
+    # ✅ REQUIRED DIRECTORY FOR KERNEL STRUCTURE STAGE
+    (run_path / "validation").mkdir(exist_ok=True)
+
     # --- 1. Compile policy
     policy = json.loads(Path("contracts/finance_policy.json").read_text())
 
