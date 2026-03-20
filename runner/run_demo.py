@@ -27,6 +27,7 @@ anchors:
 import json
 from pathlib import Path
 import shutil
+from datetime import datetime, timezone
 
 from cricore.enforcement.execution import run_enforcement_pipeline
 from compiler.compile_policy import compile_policy
@@ -42,6 +43,10 @@ def write_json(path: Path, data: dict):
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
 
+def utc_now():
+    return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+
+
 def build_run(run_name: str, proposal_builder):
 
     run_path = BASE_RUN_PATH / run_name
@@ -51,44 +56,49 @@ def build_run(run_name: str, proposal_builder):
 
     run_path.mkdir(parents=True)
 
-    # --- REQUIRED DIRECTORY (structure stage)
+    # --- REQUIRED directory
     validation_path = run_path / "validation"
     validation_path.mkdir(exist_ok=True)
 
-    # Minimal placeholder validation artifact
     write_json(validation_path / "structure.json", {"status": "placeholder"})
 
-    # --- 1. Compile policy
+    # --- Compile policy
     policy = json.loads(Path("contracts/finance_policy.json").read_text())
-
     compiled_contract = compile_policy(policy)
 
-    # --- 2. Build proposal
+    # --- Build proposal
     proposal = proposal_builder()
 
-    # --- 3. Extract contract hash
     contract_hash = compiled_contract.get("contract_hash", "MISSING_HASH")
 
+    # --- CORRECT contract declaration
     contract_declaration = {
-        "id": policy["contract_id"],
-        "version": policy["contract_version"],
-        "hash": contract_hash
+        "run_id": run_name,
+        "contract_id": policy["contract_id"],
+        "contract_version": policy["contract_version"],
+        "contract_hash": contract_hash,
+        "created_utc": utc_now(),
     }
 
-    # Inject correct contract reference into proposal
+    # Sync proposal contract reference
     proposal["contract"]["hash"] = contract_hash
 
-    # --- 4. Write required files
+    # --- Write files
     write_json(run_path / "contract.json", contract_declaration)
     write_json(run_path / "compiled_contract.json", compiled_contract)
     write_json(run_path / "proposal.json", proposal)
 
-    # Minimal required artifacts
     (run_path / "report.md").write_text("# Demo Report\n", encoding="utf-8")
-    write_json(run_path / "approval.json", {"status": "approved"})
-    write_json(run_path / "randomness.json", {"seed": 42})
 
-    # --- Minimal valid hash file (structure + integrity bootstrap)
+    write_json(run_path / "approval.json", {
+        "approved_by": "cfo",
+        "timestamp": utc_now()
+    })
+
+    write_json(run_path / "randomness.json", {
+        "seed": 42
+    })
+
     (run_path / "SHA256SUMS.txt").write_text(
         "dummyhash contract.json\n",
         encoding="utf-8"
@@ -115,13 +125,12 @@ def execute_run(run_name: str, proposal_builder):
         print(f"{r.stage_id}: {status}")
 
         if not r.passed:
-            reason = (
-                getattr(r, "reason", None)
-                or getattr(r, "message", None)
-                or getattr(r, "error", None)
-                or "No reason provided"
-            )
-            print(f"  → {reason}")
+            messages = getattr(r, "messages", None)
+            if messages:
+                for m in messages:
+                    print(f"  → {m}")
+            else:
+                print("  → No details provided")
 
     print("\nFINAL DECISION:")
     print("COMMIT ALLOWED" if commit_allowed else "COMMIT BLOCKED")
