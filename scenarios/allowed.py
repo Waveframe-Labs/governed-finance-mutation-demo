@@ -4,7 +4,7 @@ title: "Blocked Finance Mutation Scenario"
 filetype: "source"
 type: "scenario"
 domain: "finance"
-version: "0.1.0"
+version: "0.1.1"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-03-19"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Blocked-Scenario-v0.1.0"
+  - "Finance-Mutation-Blocked-Scenario-v0.1.1"
 ---
 """
 
@@ -31,7 +31,7 @@ import json
 
 def build_blocked_proposal():
 
-    artifact_path = Path("scenarios/artifact.json")
+    artifact_path = Path("scenarios/allowed_artifact.json")
     artifact_path.parent.mkdir(parents=True, exist_ok=True)
 
     artifact_path.write_text(
