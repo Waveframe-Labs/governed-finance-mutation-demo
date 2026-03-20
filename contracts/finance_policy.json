@@ -1,0 +1,22 @@
+{
+  "contract_id": "finance-raci",
+  "contract_version": "0.1.0",
+
+  "roles": {
+    "required": [
+      "proposer",
+      "responsible",
+      "accountable"
+    ]
+  },
+
+  "constraints": [
+    {
+      "type": "separation_of_duties",
+      "roles": [
+        "responsible",
+        "accountable"
+      ]
+    }
+  ]
+}
