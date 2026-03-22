@@ -98,6 +98,28 @@ commit_allowed (True / False)
 
 ---
 
+## Setup
+
+This demo depends on the following packages:
+
+- CRI-CORE (enforcement kernel)
+- CRI-CORE Contract Compiler
+- CRI-CORE Proposal Normalizer
+
+Install them via pip:
+
+```bash
+pip install cricore
+pip install cricore-contract-compiler
+pip install cricore-proposal-normalizer
+```
+ Then run:
+ ```
+ python -m runner.run_demo
+ ```
+ 
+---
+
 ## How to Run
 
 ```
