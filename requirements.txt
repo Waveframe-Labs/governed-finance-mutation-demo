@@ -1,0 +1,3 @@
+cricore
+cricore-contract-compiler
+cricore-proposal-normalizer
