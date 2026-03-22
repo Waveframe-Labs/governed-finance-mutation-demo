@@ -2,28 +2,23 @@
 
 Deterministic commit gating for AI-assisted system mutations using CRI-CORE.
 
-This demo shows how a proposed system mutation is:
-
-1. Constructed from artifacts  
-2. Bound to a governance contract  
-3. Materialized into a run  
-4. Evaluated by the CRI-CORE enforcement kernel  
-5. Deterministically accepted or rejected  
+This repository demonstrates a **working enforcement pipeline** where a proposed system mutation is either **committed or blocked** based on structural governance constraints.
 
 ---
 
-## What This Demonstrates
+## What You Get
 
-This is a **full pipeline demo**, not a static case study.
+This is a **runnable, end-to-end demo** showing:
 
-It proves that:
+- Proposal construction from artifacts
+- Contract binding via compiled governance policy
+- Run materialization into a verifiable execution unit
+- Enforcement through the CRI-CORE kernel
+- Deterministic commit decision
 
-- A mutation proposal can be **programmatically constructed**
-- Governance constraints can be **bound via a compiled contract**
-- Enforcement can be applied **at the commit boundary**
-- The system produces a **deterministic decision**:
-  - ✅ Commit allowed  
-  - ❌ Commit blocked  
+**Output is binary and reproducible:**
+- ✅ Commit allowed  
+- ❌ Commit blocked  
 
 ---
 
@@ -33,16 +28,16 @@ It proves that:
 
 An AI system proposes reallocating budget between departments.
 
-### Required roles:
+### Required roles
 
 - `proposer` — AI system  
 - `responsible` — Finance Manager  
 - `accountable` — CFO  
 
-### Constraint:
+### Constraint
 
 - Separation of duties:
-  - `responsible` and `accountable` **must be different identities**
+  - `responsible` and `accountable` must be **different identities**
 
 ---
 
@@ -50,12 +45,11 @@ An AI system proposes reallocating budget between departments.
 
 ### ❌ Blocked Scenario
 
-- Finance Manager is both:
+- Finance Manager assigned to both:
   - `responsible`
   - `accountable`
 
 **Result:**
-
 ```
 independence: FAIL
 COMMIT BLOCKED
@@ -65,12 +59,11 @@ COMMIT BLOCKED
 
 ### ✅ Allowed Scenario
 
-- Roles are assigned to distinct identities:
+- Roles assigned to distinct identities:
   - `responsible` → Finance Manager  
   - `accountable` → CFO  
 
 **Result:**
-
 ```
 independence: PASS
 COMMIT ALLOWED
@@ -80,6 +73,7 @@ COMMIT ALLOWED
 
 ## Architecture
 
+```
 contracts/finance_policy.json
 ↓
 contract compiler
@@ -90,37 +84,25 @@ proposal_normalizer
 ↓
 proposal.json
 ↓
-runner → builds run directory
+runner (builds run directory)
 ↓
-CRI-CORE kernel
+CRI-CORE enforcement pipeline
 ↓
 commit_allowed (True / False)
+```
 
 ---
 
 ## Setup
 
-This demo depends on the following packages:
-
-- CRI-CORE (enforcement kernel)
-- CRI-CORE Contract Compiler
-- CRI-CORE Proposal Normalizer
-
-Install them via pip:
-
-```bash
-pip install cricore
-pip install cricore-contract-compiler
-pip install cricore-proposal-normalizer
+Install all dependencies:
 ```
- Then run:
- ```
- python -m runner.run_demo
- ```
- 
+pip install -r requirements.txt
+```
+
 ---
 
-## How to Run
+## Run the Demo
 
 ```
 python -m runner.run_demo
@@ -144,23 +126,33 @@ COMMIT ALLOWED
 
 ---
 
+## What This Proves
+
+This demo shows that:
+
+* Governance constraints can be enforced **at execution time**
+* Responsibility can be validated **structurally, not by convention**
+* Invalid system mutations can be **prevented before commit**
+
+---
+
 ## Key Concepts
 
-### 1. Proposal Normalization
+### Proposal Normalization
 
-Transforms artifacts and mutation intent into a canonical proposal structure.
+Transforms artifacts and mutation intent into a canonical proposal.
 
-### 2. Contract Compilation
+### Contract Compilation
 
 Converts governance policy into a deterministic enforcement artifact.
 
-### 3. Run Materialization
+### Run Materialization
 
-Assembles all required artifacts into a verifiable execution unit.
+Builds a structured execution unit for validation.
 
-### 4. Enforcement Pipeline
+### Enforcement Pipeline
 
-CRI-CORE evaluates the run across ordered stages:
+CRI-CORE evaluates the run across stages:
 
 * structure
 * contract validation
@@ -171,41 +163,21 @@ CRI-CORE evaluates the run across ordered stages:
 
 ---
 
-## Why This Matters
+## Where This Applies
 
-In real systems, AI recommendations often lack enforceable accountability.
-
-This demo shows how to:
-
-* Prevent invalid decisions from being committed
-* Enforce role separation structurally
-* Provide deterministic governance at execution time
-
----
-
-## Positioning
-
-This repository demonstrates:
-
-* AI governance enforcement at runtime
-* Deterministic decision systems
-* Structured responsibility validation
-
-Applicable to:
-
-* Finance workflows
-* Enterprise AI systems
-* Autonomous agent governance
-* Compliance-critical decision systems
+* Finance and budget systems
+* Enterprise AI workflows
+* Autonomous agents
+* Compliance-critical environments
 
 ---
 
 ## Status
 
-Active development — early system demonstration of CRI-CORE enforcement capabilities.
+Early-stage demonstration of CRI-CORE enforcement capabilities.
 
 ---
 
 <div align="center">
-  <sub>© 2026 Waveframe Labs — Independent Open-Science Research Entity</sub>
+  <sub>© 2026 Waveframe Labs</sub>
 </div>
