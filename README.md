@@ -149,17 +149,6 @@ CRI-CORE evaluates the run across ordered stages:
 
 ---
 
-## Important Distinction
-
-This demo is **not** the same as the RACI Finance Demo.
-
-| Demo Type         | Purpose                              |
-| ----------------- | ------------------------------------ |
-| RACI Finance Demo | Case study / conceptual illustration |
-| This Demo         | End-to-end enforcement pipeline      |
-
----
-
 ## Why This Matters
 
 In real systems, AI recommendations often lack enforceable accountability.
