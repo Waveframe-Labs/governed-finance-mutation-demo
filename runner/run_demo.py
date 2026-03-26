@@ -4,10 +4,10 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.1.0"
+version: "0.2.0"
 status: "Active"
 created: "2026-03-19"
-updated: "2026-03-19"
+updated: "2026-03-26"
 
 author:
   name: "Shawn C. Wright"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.1.0"
+  - "Finance-Mutation-Demo-Runner-v0.2.0"
 ---
 """
 
@@ -40,6 +40,10 @@ from scenarios.blocked import build_blocked_proposal
 BASE_RUN_PATH = Path("runs")
 
 
+# -----------------------------
+# Utilities
+# -----------------------------
+
 def write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
@@ -55,6 +59,70 @@ def sha256_file(path: Path) -> str:
             digest.update(chunk)
     return digest.hexdigest()
 
+
+# -----------------------------
+# Scenario Interpretation Layer
+# -----------------------------
+
+def extract_failure_reason(results) -> list:
+    reasons = []
+
+    for r in results:
+        if not r.passed:
+            if r.stage_id == "independence":
+                reasons.append(
+                    "Same individual attempted to propose and approve the financial action (violates role separation)"
+                )
+            elif r.stage_id == "publication-commit":
+                continue  # handled implicitly
+            else:
+                reasons.append(f"Failed at stage: {r.stage_id}")
+
+    if not reasons:
+        reasons.append("Unknown validation failure")
+
+    return reasons
+
+
+def print_scenario_result(commit_allowed: bool, results):
+
+    action_description = "Reallocate $2M from Marketing → Operations"
+
+    print("\n" + "=" * 50)
+    print("SCENARIO RESULT")
+    print("=" * 50)
+
+    print(f"Action: {action_description}\n")
+
+    if commit_allowed:
+        print("Result: ALLOWED\n")
+
+        print("Reason:")
+        print("- Required roles were satisfied")
+        print("- Independent approval was present\n")
+
+        print("Outcome:")
+        print("- Funds were reallocated with proper authorization")
+        print("- Action executed only after validation\n")
+
+    else:
+        reasons = extract_failure_reason(results)
+
+        print("Result: BLOCKED\n")
+
+        print("Reason:")
+        for r in reasons:
+            print(f"- {r}")
+
+        print("\nOutcome:")
+        print("- No funds were moved")
+        print("- Unauthorized financial action prevented before execution")
+        print("- Required approval conditions were not met\n")
+
+
+# -----------------------------
+# Run Construction
+# -----------------------------
 
 def build_run(run_name: str, proposal_builder):
 
@@ -127,6 +195,10 @@ def build_run(run_name: str, proposal_builder):
     return run_path, proposal
 
 
+# -----------------------------
+# Execution
+# -----------------------------
+
 def execute_run(run_name: str, proposal_builder):
 
     run_path, proposal = build_run(run_name, proposal_builder)
@@ -155,8 +227,15 @@ def execute_run(run_name: str, proposal_builder):
     print("\nFINAL DECISION:")
     print("COMMIT ALLOWED" if commit_allowed else "COMMIT BLOCKED")
 
+    # 🔥 NEW LAYER
+    print_scenario_result(commit_allowed, results)
+
     return commit_allowed
 
+
+# -----------------------------
+# Main
+# -----------------------------
 
 def main():
 
@@ -176,3 +255,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
