@@ -4,7 +4,7 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.2.0"
+version: "0.3.0"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-03-26"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.2.0"
+  - "Finance-Mutation-Demo-Runner-v0.3.0"
 ---
 """
 
@@ -61,6 +61,36 @@ def sha256_file(path: Path) -> str:
 
 
 # -----------------------------
+# Scenario Summary Layer
+# -----------------------------
+
+def print_scenario_intro(run_name: str):
+    print("\n" + "=" * 50)
+    print(f"RUN: {run_name}")
+    print("=" * 50)
+
+    if "blocked" in run_name:
+        print("\nSCENARIO: Unauthorized Financial Action Attempt\n")
+        print(
+            "An AI agent attempts to both propose and approve a $2M "
+            "reallocation from Marketing to Operations."
+        )
+        print("\nExpected behavior:")
+        print("- Detect role separation violation")
+        print("- Block execution\n")
+
+    else:
+        print("\nSCENARIO: Authorized Financial Action\n")
+        print(
+            "An AI agent proposes a $2M reallocation with proper role separation "
+            "and independent approval."
+        )
+        print("\nExpected behavior:")
+        print("- Validate required roles")
+        print("- Allow execution\n")
+
+
+# -----------------------------
 # Scenario Interpretation Layer
 # -----------------------------
 
@@ -74,7 +104,7 @@ def extract_failure_reason(results) -> list:
                     "Same individual attempted to propose and approve the financial action (violates role separation)"
                 )
             elif r.stage_id == "publication-commit":
-                continue  # handled implicitly
+                continue
             else:
                 reasons.append(f"Failed at stage: {r.stage_id}")
 
@@ -86,7 +116,9 @@ def extract_failure_reason(results) -> list:
 
 def print_scenario_result(commit_allowed: bool, results):
 
-    action_description = "Reallocate $2M from Marketing → Operations"
+    action_description = (
+        "AI agent attempts to reallocate $2M from Marketing → Operations"
+    )
 
     print("\n" + "=" * 50)
     print("SCENARIO RESULT")
@@ -116,7 +148,7 @@ def print_scenario_result(commit_allowed: bool, results):
 
         print("\nOutcome:")
         print("- No funds were moved")
-        print("- Unauthorized financial action prevented before execution")
+        print("- Unauthorized financial action was stopped before it executed")
         print("- Required approval conditions were not met\n")
 
 
@@ -208,10 +240,10 @@ def execute_run(run_name: str, proposal_builder):
         run_context=proposal.get("run_context", {}),
     )
 
-    print("\n" + "=" * 50)
-    print(f"RUN: {run_name}")
-    print("=" * 50)
+    # 🔥 Scenario intro BEFORE logs
+    print_scenario_intro(run_name)
 
+    # Technical logs
     for r in results:
         status = "PASS" if r.passed else "FAIL"
         print(f"{r.stage_id}: {status}")
@@ -227,7 +259,7 @@ def execute_run(run_name: str, proposal_builder):
     print("\nFINAL DECISION:")
     print("COMMIT ALLOWED" if commit_allowed else "COMMIT BLOCKED")
 
-    # 🔥 NEW LAYER
+    # 🔥 Scenario result AFTER logs
     print_scenario_result(commit_allowed, results)
 
     return commit_allowed
@@ -246,13 +278,13 @@ def main():
     allowed = execute_run("allowed-run", build_allowed_proposal)
 
     print("\n" + "=" * 50)
-    print("SUMMARY")
+    print("FINAL TAKEAWAY")
     print("=" * 50)
 
-    print(f"Blocked scenario → {'FAILED (correct)' if not blocked else 'ERROR'}")
-    print(f"Allowed scenario → {'PASSED (correct)' if allowed else 'ERROR'}")
+    print("System correctly:")
+    print("- blocked an unauthorized financial action")
+    print("- allowed a properly authorized action")
 
 
 if __name__ == "__main__":
     main()
-    
