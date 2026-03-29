@@ -1,47 +1,56 @@
 # Governed Mutation Pipeline Demo (Finance Example)
 
-**Stop AI-generated changes from approving themselves, bypassing controls, or reaching production.**
+**An AI system can move $2M without approval — unless something stops it.**
 
-This repository demonstrates a **deterministic enforcement pipeline** that evaluates a proposed system mutation and decides:
+This demo shows a simple but critical problem:
 
-* ✅ **Allow commit**
-* ❌ **Block commit**
+An AI agent proposes a financial change… and executes it in the same workflow.
 
-No ambiguity. No “we’ll catch it later.”
-If the rules fail, the change never happens.
+No separation of roles.  
+No required approval.  
+No enforcement at the point of action.
 
----
-
-## Why This Exists
-
-AI systems can propose changes faster than humans can review them.
-
-That’s a problem.
-
-This demo shows how to enforce **non-negotiable governance rules** — like separation of duties — *before* a change is accepted.
-
-**Example:**
-Prevent a single person (or AI acting on their behalf) from both proposing *and* approving a financial decision.
+**The change just happens.**
 
 ---
 
-## What This Demo Does
+## What This Demo Shows
 
-This is a **fully runnable, end-to-end pipeline** that:
+This repository demonstrates how to stop that moment before execution.
 
-1. Takes a proposed system mutation
-2. Binds it to a governance contract
-3. Builds a structured execution run
-4. Validates it through CRI-CORE
-5. Produces a **deterministic commit decision**
+The same financial action is executed under two conditions:
 
-**There is no partial success, no warning state, and no override.**
-The system either allows the change — or blocks it completely.
+### ❌ Without proper enforcement
+- The AI proposes and approves the change
+- Required roles are not satisfied
+- The system executes the action anyway  
+→ **The budget is updated**
 
-**Output is always one of two things:**
+---
 
-* ✅ `COMMIT ALLOWED`
-* ❌ `COMMIT BLOCKED`
+### ✅ With enforcement (CRI-CORE)
+- Role separation is validated
+- Required approvals are enforced
+- The system evaluates the action before execution  
+→ **The change is blocked before it happens**
+
+---
+
+## What This Is
+
+This is a **deterministic execution control layer**.
+
+It sits at the point where a system attempts to act and decides:
+
+- ✅ allow the change  
+- ❌ block it before execution  
+
+No warnings.  
+No after-the-fact auditing.  
+
+**The action either happens — or it doesn’t.**
+
+This approach is model-agnostic — it applies to any system that attempts to execute a real-world action.
 
 ---
 
@@ -51,9 +60,9 @@ An AI system proposes reallocating budget between departments.
 
 ### Required Roles
 
-* `proposer` → AI system
-* `responsible` → Finance Manager
-* `accountable` → CFO
+* `proposer` → AI system  
+* `responsible` → Finance Manager  
+* `accountable` → CFO  
 
 ### Rule Enforced
 
@@ -80,6 +89,7 @@ COMMIT BLOCKED
 ```
 
 **Why it fails:**
+
 One person cannot approve their own financial decision.
 
 ---
@@ -88,8 +98,8 @@ One person cannot approve their own financial decision.
 
 Roles are separated:
 
-* `responsible` → Finance Manager
-* `accountable` → CFO
+* `responsible` → Finance Manager  
+* `accountable` → CFO  
 
 **Result:**
 
@@ -100,21 +110,63 @@ COMMIT ALLOWED
 
 ---
 
+## Expected Output
+
+The demo runs two scenarios:
+
+### ❌ Blocked Scenario
+
+An AI agent attempts to propose and approve the same $2M reallocation.
+
+```
+FINAL DECISION:
+COMMIT BLOCKED
+
+SCENARIO RESULT
+
+Result: BLOCKED
+Outcome:
+
+* No funds were moved
+* Unauthorized financial action was stopped before it executed
+```
+
+---
+
+### ✅ Allowed Scenario
+
+Proper role separation is enforced.
+
+```
+FINAL DECISION:
+COMMIT ALLOWED
+
+SCENARIO RESULT
+
+Result: ALLOWED
+Outcome:
+
+* Funds were reallocated with proper authorization
+* Action executed only after validation
+```
+
+---
+
 ## How the Pipeline Works
 
 ```
 Policy (finance_policy.json)
-        ↓
+↓
 Contract Compiler
-        ↓
+↓
 Compiled Contract
-        ↓
+↓
 Proposal Normalization
-        ↓
+↓
 Structured Run
-        ↓
+↓
 CRI-CORE Enforcement
-        ↓
+↓
 Commit Decision (ALLOW / BLOCK)
 ```
 
@@ -140,52 +192,36 @@ python -m runner.run_demo
 
 ---
 
-## Expected Output
-
-```
-Running BLOCKED scenario...
-
-independence: FAIL
-COMMIT BLOCKED
-
-Running ALLOWED scenario...
-
-independence: PASS
-COMMIT ALLOWED
-```
-
----
-
 ## How This Would Be Used
 
 **This pipeline is designed to sit directly in front of execution.**
 
 In a real system:
 
-1. An AI (or user) proposes a change
-2. The proposal is normalized into a standard format
-3. A governance contract is applied
-4. CRI-CORE validates the run
+1. An AI (or user) proposes a change  
+2. The proposal is normalized into a standard format  
+3. A governance contract is applied  
+4. CRI-CORE validates the run  
 5. The system:
 
-   * allows the change
-   * or blocks it before execution
+   - allows the change  
+   - or blocks it before execution  
 
 This can sit in front of:
 
-* CI/CD pipelines
-* financial systems
-* autonomous agents
-* compliance-critical workflows
+* CI/CD pipelines  
+* financial systems  
+* autonomous agents  
+* compliance-critical workflows  
 
 ---
 
 ## What This Proves
 
-* Unsafe changes can be **stopped before they happen**
-* Governance rules can be **enforced programmatically**
-* Responsibility can be **validated structurally, not assumed**
-* AI systems can be **constrained without removing autonomy**
+* Unsafe changes can be **stopped before they happen**  
+* Governance rules can be **enforced programmatically**  
+* Responsibility can be **validated structurally, not assumed**  
+* AI systems can be **constrained without removing autonomy**  
 
 ---
 
@@ -195,23 +231,23 @@ This demo is relevant for:
 
 ### Engineering & Platform Teams
 
-* Enforcing constraints at the commit or deployment boundary
-* Preventing invalid system changes from reaching production
+* Enforcing constraints at the commit or deployment boundary  
+* Preventing invalid system changes from reaching production  
 
 ### AI / ML Teams
 
-* Controlling autonomous or semi-autonomous agent behavior
-* Ensuring AI-generated actions meet governance requirements
+* Controlling autonomous or semi-autonomous agent behavior  
+* Ensuring AI-generated actions meet governance requirements  
 
 ### Compliance & Risk Teams
 
-* Enforcing separation of duties and accountability rules
-* Reducing risk in financial or regulated workflows
+* Enforcing separation of duties and accountability rules  
+* Reducing risk in financial or regulated workflows  
 
 ### Organizations Deploying AI Systems
 
-* Adding deterministic safeguards before execution
-* Moving from “monitoring” → **enforcement**
+* Adding deterministic safeguards before execution  
+* Moving from “monitoring” → **enforcement**  
 
 ---
 
