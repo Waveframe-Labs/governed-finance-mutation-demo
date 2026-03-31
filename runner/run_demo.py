@@ -4,10 +4,10 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.3.0"
+version: "0.3.1"
 status: "Active"
 created: "2026-03-19"
-updated: "2026-03-26"
+updated: "2026-03-31"
 
 author:
   name: "Shawn C. Wright"
@@ -20,18 +20,19 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.3.0"
+  - "Finance-Mutation-Demo-Runner-v0.3.1"
 ---
 """
 
-import hashlib
-import json
-import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+import json
+import shutil
 
 from compiler.compile_policy import compile_policy
 from cricore.enforcement.execution import run_enforcement_pipeline
+
+from cricore.integrity.finalize import finalize_run_integrity
 
 from scenarios.allowed import build_allowed_proposal
 from scenarios.blocked import build_blocked_proposal
@@ -40,10 +41,6 @@ from scenarios.blocked import build_blocked_proposal
 BASE_RUN_PATH = Path("runs")
 
 
-# -----------------------------
-# Utilities
-# -----------------------------
-
 def write_json(path: Path, data: dict) -> None:
     path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
@@ -51,110 +48,6 @@ def write_json(path: Path, data: dict) -> None:
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
-
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-# -----------------------------
-# Scenario Summary Layer
-# -----------------------------
-
-def print_scenario_intro(run_name: str):
-    print("\n" + "=" * 50)
-    print(f"RUN: {run_name}")
-    print("=" * 50)
-
-    if "blocked" in run_name:
-        print("\nSCENARIO: Unauthorized Financial Action Attempt\n")
-        print(
-            "An AI agent attempts to both propose and approve a $2M "
-            "reallocation from Marketing to Operations."
-        )
-        print("\nExpected behavior:")
-        print("- Detect role separation violation")
-        print("- Block execution\n")
-
-    else:
-        print("\nSCENARIO: Authorized Financial Action\n")
-        print(
-            "An AI agent proposes a $2M reallocation with proper role separation "
-            "and independent approval."
-        )
-        print("\nExpected behavior:")
-        print("- Validate required roles")
-        print("- Allow execution\n")
-
-
-# -----------------------------
-# Scenario Interpretation Layer
-# -----------------------------
-
-def extract_failure_reason(results) -> list:
-    reasons = []
-
-    for r in results:
-        if not r.passed:
-            if r.stage_id == "independence":
-                reasons.append(
-                    "Same individual attempted to propose and approve the financial action (violates role separation)"
-                )
-            elif r.stage_id == "publication-commit":
-                continue
-            else:
-                reasons.append(f"Failed at stage: {r.stage_id}")
-
-    if not reasons:
-        reasons.append("Unknown validation failure")
-
-    return reasons
-
-
-def print_scenario_result(commit_allowed: bool, results):
-
-    action_description = (
-        "AI agent attempts to reallocate $2M from Marketing → Operations"
-    )
-
-    print("\n" + "=" * 50)
-    print("SCENARIO RESULT")
-    print("=" * 50)
-
-    print(f"Action: {action_description}\n")
-
-    if commit_allowed:
-        print("Result: ALLOWED\n")
-
-        print("Reason:")
-        print("- Required roles were satisfied")
-        print("- Independent approval was present\n")
-
-        print("Outcome:")
-        print("- Funds were reallocated with proper authorization")
-        print("- Action executed only after validation\n")
-
-    else:
-        reasons = extract_failure_reason(results)
-
-        print("Result: BLOCKED\n")
-
-        print("Reason:")
-        for r in reasons:
-            print(f"- {r}")
-
-        print("\nOutcome:")
-        print("- No funds were moved")
-        print("- Unauthorized financial action was stopped before it executed")
-        print("- Required approval conditions were not met\n")
-
-
-# -----------------------------
-# Run Construction
-# -----------------------------
 
 def build_run(run_name: str, proposal_builder):
 
@@ -165,9 +58,10 @@ def build_run(run_name: str, proposal_builder):
 
     run_path.mkdir(parents=True)
 
-    validation_path = run_path / "validation"
-    validation_path.mkdir(exist_ok=True)
-    write_json(validation_path / "structure.json", {"status": "placeholder"})
+    # -----------------------------
+    # Base structure
+    # -----------------------------
+    (run_path / "validation").mkdir(exist_ok=True)
 
     policy = json.loads(
         Path("contracts/finance_policy.json").read_text(encoding="utf-8")
@@ -178,58 +72,40 @@ def build_run(run_name: str, proposal_builder):
 
     contract_hash = compiled_contract.get("contract_hash", "MISSING_HASH")
 
-    contract_declaration = {
+    proposal["contract"]["hash"] = contract_hash
+
+    # -----------------------------
+    # Write core artifacts
+    # -----------------------------
+    write_json(run_path / "contract.json", {
         "run_id": run_name,
         "contract_id": policy["contract_id"],
         "contract_version": policy["contract_version"],
         "contract_hash": contract_hash,
         "created_utc": utc_now(),
-    }
+    })
 
-    proposal["contract"]["hash"] = contract_hash
+    write_json(run_path / "compiled_contract.json", compiled_contract)
+    write_json(run_path / "proposal.json", proposal)
 
-    contract_path = run_path / "contract.json"
-    compiled_contract_path = run_path / "compiled_contract.json"
-    proposal_path = run_path / "proposal.json"
-    report_path = run_path / "report.md"
-    approval_path = run_path / "approval.json"
-    randomness_path = run_path / "randomness.json"
-    sha_path = run_path / "SHA256SUMS.txt"
+    (run_path / "report.md").write_text("# Demo Report\n", encoding="utf-8")
 
-    write_json(contract_path, contract_declaration)
-    write_json(compiled_contract_path, compiled_contract)
-    write_json(proposal_path, proposal)
+    write_json(run_path / "approval.json", {
+        "approved_by": "cfo",
+        "timestamp": utc_now(),
+    })
 
-    report_path.write_text("# Demo Report\n", encoding="utf-8")
+    write_json(run_path / "randomness.json", {
+        "seed": 42,
+    })
 
-    write_json(
-        approval_path,
-        {
-            "approved_by": "cfo",
-            "timestamp": utc_now(),
-        },
-    )
-
-    write_json(
-        randomness_path,
-        {
-            "seed": 42,
-        },
-    )
-
-    contract_sha = sha256_file(contract_path)
-
-    sha_path.write_text(
-        f"{contract_sha} contract.json\n",
-        encoding="utf-8",
-    )
+    # -----------------------------
+    # 🔥 CRITICAL: finalize integrity ONCE
+    # -----------------------------
+    finalize_run_integrity(run_path)
 
     return run_path, proposal
 
-
-# -----------------------------
-# Execution
-# -----------------------------
 
 def execute_run(run_name: str, proposal_builder):
 
@@ -240,50 +116,23 @@ def execute_run(run_name: str, proposal_builder):
         run_context=proposal.get("run_context", {}),
     )
 
-    # 🔥 Scenario intro BEFORE logs
-    print_scenario_intro(run_name)
+    print(f"\nRUN: {run_name}")
 
-    # Technical logs
     for r in results:
         status = "PASS" if r.passed else "FAIL"
         print(f"{r.stage_id}: {status}")
-
-        if not r.passed:
-            messages = getattr(r, "messages", None)
-            if messages:
-                for m in messages:
-                    print(f"  → {m}")
-            else:
-                print("  → No details provided")
+        for m in r.messages:
+            print(f"  → {m}")
 
     print("\nFINAL DECISION:")
     print("COMMIT ALLOWED" if commit_allowed else "COMMIT BLOCKED")
 
-    # 🔥 Scenario result AFTER logs
-    print_scenario_result(commit_allowed, results)
-
     return commit_allowed
 
 
-# -----------------------------
-# Main
-# -----------------------------
-
 def main():
-
-    print("\nRunning BLOCKED scenario...")
-    blocked = execute_run("blocked-run", build_blocked_proposal)
-
-    print("\nRunning ALLOWED scenario...")
-    allowed = execute_run("allowed-run", build_allowed_proposal)
-
-    print("\n" + "=" * 50)
-    print("FINAL TAKEAWAY")
-    print("=" * 50)
-
-    print("System correctly:")
-    print("- blocked an unauthorized financial action")
-    print("- allowed a properly authorized action")
+    execute_run("blocked-run", build_blocked_proposal)
+    execute_run("allowed-run", build_allowed_proposal)
 
 
 if __name__ == "__main__":
