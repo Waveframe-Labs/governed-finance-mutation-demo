@@ -53,9 +53,7 @@ No after-the-fact auditing.
 ## Install
 
 ```
-
 pip install cricore
-
 ```
 
 ---
@@ -63,9 +61,7 @@ pip install cricore
 ## Run
 
 ```
-
 python -m runner.run_demo
-
 ```
 
 ---
@@ -95,10 +91,8 @@ An AI system proposes reallocating budget between departments.
 Finance Manager is assigned to both roles.
 
 ```
-
 independence: FAIL
 COMMIT BLOCKED
-
 ```
 
 **Result:**
@@ -112,10 +106,8 @@ COMMIT BLOCKED
 Roles are properly separated.
 
 ```
-
 independence: PASS
 COMMIT ALLOWED
-
 ```
 
 **Result:**
@@ -132,10 +124,8 @@ When you run the demo:
 - With CRI-CORE → unauthorized action is blocked  
 
 ```
-
 Execution is no longer assumed.
 It is explicitly authorized or blocked at the mutation boundary.
-
 ```
 
 ---
@@ -143,7 +133,6 @@ It is explicitly authorized or blocked at the mutation boundary.
 ## How It Works
 
 ```
-
 Proposed Action
 ↓
 CRI-CORE Enforcement
@@ -151,7 +140,6 @@ CRI-CORE Enforcement
 commit_allowed = true / false
 ↓
 Execution (or no execution)
-
 ```
 
 CRI-CORE acts as a **control point**, not a validator.
