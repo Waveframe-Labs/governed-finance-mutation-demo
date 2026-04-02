@@ -87,7 +87,7 @@ def extract_human_reason(result: Any) -> list[str]:
                 reasons.append(f"Failed at stage: {stage.stage_id}")
 
     if not reasons:
-        reasons.append("Unknown validation failure")
+        reasons.append("Unknown enforcement failure")
 
     return reasons
 
@@ -110,12 +110,12 @@ def unsafe_execute(run_name: str, proposal_builder) -> Dict[str, Any]:
     print(scenario["action"])
 
     print("\nResult:")
-    print("⚠️ EXECUTED WITHOUT GOVERNANCE")
+    print("⚠️ EXECUTED (NO ENFORCEMENT)")
 
     print("\nOutcome:")
     print(f"- {scenario['unsafe_outcome']}")
     print("- No admissibility check was performed")
-    print("- No enforced execution boundary was present")
+    print("- No execution boundary was enforced")
 
     print("\nExecution Result:")
     print(execution_result)
@@ -151,7 +151,7 @@ def governed_execute_demo(run_name: str, proposal_builder, policy: Dict[str, Any
     if governed_result["commit_allowed"]:
         print("- Required roles satisfied")
         print("- Independent approval verified")
-        print("- Execution was permitted only after CRI-CORE validation")
+        print("- Execution was permitted only after CRI-CORE authorization")
     else:
         reasons = extract_human_reason(governed_result["result"])
         for reason in reasons:
@@ -162,7 +162,7 @@ def governed_execute_demo(run_name: str, proposal_builder, policy: Dict[str, Any
         print("- Execution did not occur")
         print("- The action was stopped at the mutation boundary")
     else:
-        print("- Execution occurred only after CRI-CORE allowed it")
+        print("- Execution occurred only after CRI-CORE authorization")
         print("- The mutation remained inside the governed path")
 
     print("\nExecution Result:")
@@ -206,8 +206,9 @@ def main():
 
     if blocked_result["blocked"] and allowed_result["commit_allowed"]:
         print("Without CRI-CORE, both actions execute.")
-        print("With CRI-CORE, the unauthorized action is blocked and the authorized action is allowed.")
-        print("Execution is no longer optional validation. It is governed at the mutation boundary.")
+        print("With CRI-CORE, unauthorized actions are blocked and authorized actions are allowed.")
+        print("Execution is no longer assumed.")
+        print("It is explicitly authorized or blocked at the mutation boundary.")
     else:
         print("Demo completed, but one or more scenarios did not produce the expected outcome.")
 
