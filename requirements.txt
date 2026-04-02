@@ -1,3 +1,1 @@
-cricore
-cricore-contract-compiler
-cricore-proposal-normalizer
+cricore>=0.12.0
