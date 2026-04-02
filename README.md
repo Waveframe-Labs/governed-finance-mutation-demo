@@ -4,11 +4,11 @@
 
 This demo shows a simple but critical problem:
 
-An AI agent proposes a financial change… and executes it in the same workflow.
+An AI proposes a financial change… and executes it in the same workflow.
 
 No separation of roles.  
 No required approval.  
-No enforcement at the point of action.
+No control at the point of action.
 
 **The change just happens.**
 
@@ -16,22 +16,20 @@ No enforcement at the point of action.
 
 ## What This Demo Shows
 
-This repository demonstrates how to stop that moment before execution.
+This demo runs the **same financial action twice**:
 
-The same financial action is executed under two conditions:
-
-### ❌ Without proper enforcement
-- The AI proposes and approves the change
-- Required roles are not satisfied
+### ❌ Without enforcement
+- The AI proposes and approves the change  
+- Required roles are violated  
 - The system executes the action anyway  
-→ **The budget is updated**
+→ **Funds are reallocated**
 
 ---
 
-### ✅ With enforcement (CRI-CORE)
-- Role separation is validated
-- Required approvals are enforced
-- The system evaluates the action before execution  
+### ✅ With CRI-CORE enforcement
+- Role separation is enforced  
+- Required approvals are verified  
+- The action is evaluated at the execution boundary  
 → **The change is blocked before it happens**
 
 ---
@@ -40,17 +38,35 @@ The same financial action is executed under two conditions:
 
 This is a **deterministic execution control layer**.
 
-It sits at the point where a system attempts to act and decides:
+It sits at the exact point where a system attempts to act and decides:
 
-- ✅ allow the change  
-- ❌ block it before execution  
+- ✅ allow execution  
+- ❌ block execution  
 
 No warnings.  
 No after-the-fact auditing.  
 
 **The action either happens — or it doesn’t.**
 
-This approach is model-agnostic — it applies to any system that attempts to execute a real-world action.
+---
+
+## Install
+
+```
+
+pip install cricore
+
+```
+
+---
+
+## Run
+
+```
+
+python -m runner.run_demo
+
+```
 
 ---
 
@@ -64,196 +80,125 @@ An AI system proposes reallocating budget between departments.
 * `responsible` → Finance Manager  
 * `accountable` → CFO  
 
-### Rule Enforced
+### Rule
 
 **Separation of duties:**
 
-* `responsible` and `accountable` must be **different people**
+`responsible` and `accountable` must be different people.
 
 ---
 
-## Demo Runs
+## What Happens
 
 ### ❌ Blocked Case (Invalid)
 
-Finance Manager is assigned to both roles:
-
-* `responsible`
-* `accountable`
-
-**Result:**
+Finance Manager is assigned to both roles.
 
 ```
+
 independence: FAIL
 COMMIT BLOCKED
+
 ```
 
-**Why it fails:**
-
-One person cannot approve their own financial decision.
+**Result:**
+- No funds are moved  
+- The action is stopped at the mutation boundary  
 
 ---
 
 ### ✅ Allowed Case (Valid)
 
-Roles are separated:
-
-* `responsible` → Finance Manager  
-* `accountable` → CFO  
-
-**Result:**
+Roles are properly separated.
 
 ```
+
 independence: PASS
 COMMIT ALLOWED
+
+```
+
+**Result:**
+- Funds are reallocated  
+- Execution occurs only after authorization  
+
+---
+
+## Expected Behavior
+
+When you run the demo:
+
+- Without CRI-CORE → both actions execute  
+- With CRI-CORE → unauthorized action is blocked  
+
+```
+
+Execution is no longer assumed.
+It is explicitly authorized or blocked at the mutation boundary.
+
 ```
 
 ---
 
-## Expected Output
-
-The demo runs two scenarios:
-
-### ❌ Blocked Scenario
-
-An AI agent attempts to propose and approve the same $2M reallocation.
+## How It Works
 
 ```
-FINAL DECISION:
-COMMIT BLOCKED
 
-SCENARIO RESULT
-
-Result: BLOCKED
-Outcome:
-
-* No funds were moved
-* Unauthorized financial action was stopped before it executed
-```
-
----
-
-### ✅ Allowed Scenario
-
-Proper role separation is enforced.
-
-```
-FINAL DECISION:
-COMMIT ALLOWED
-
-SCENARIO RESULT
-
-Result: ALLOWED
-Outcome:
-
-* Funds were reallocated with proper authorization
-* Action executed only after validation
-```
-
----
-
-## How the Pipeline Works
-
-```
-Policy (finance_policy.json)
-↓
-Contract Compiler
-↓
-Compiled Contract
-↓
-Proposal Normalization
-↓
-Structured Run
+Proposed Action
 ↓
 CRI-CORE Enforcement
 ↓
-Commit Decision (ALLOW / BLOCK)
+commit_allowed = true / false
+↓
+Execution (or no execution)
+
 ```
 
-This pipeline turns a proposed change into a **governed execution that must pass validation before it can commit.**
+CRI-CORE acts as a **control point**, not a validator.
 
-CRI-CORE acts as a **gatekeeper** — a change cannot proceed unless all validation stages pass.
+It determines whether execution is permitted.
 
 ---
 
-## Run the Demo
+## Where This Applies
 
-Install dependencies:
+This pattern can be used anywhere a system performs real actions:
 
-```
-pip install -r requirements.txt
-```
-
-Run:
-
-```
-python -m runner.run_demo
-```
-
----
-
-## How This Would Be Used
-
-**This pipeline is designed to sit directly in front of execution.**
-
-In a real system:
-
-1. An AI (or user) proposes a change  
-2. The proposal is normalized into a standard format  
-3. A governance contract is applied  
-4. CRI-CORE validates the run  
-5. The system:
-
-   - allows the change  
-   - or blocks it before execution  
-
-This can sit in front of:
-
-* CI/CD pipelines  
-* financial systems  
-* autonomous agents  
-* compliance-critical workflows  
+- AI agents and autonomous systems  
+- financial workflows  
+- CI/CD pipelines  
+- compliance-critical operations  
 
 ---
 
 ## What This Proves
 
-* Unsafe changes can be **stopped before they happen**  
-* Governance rules can be **enforced programmatically**  
-* Responsibility can be **validated structurally, not assumed**  
-* AI systems can be **constrained without removing autonomy**  
+- Unsafe actions can be **stopped before execution**  
+- Governance rules can be **enforced deterministically**  
+- Responsibility can be **verified structurally**  
+- AI systems can be **controlled without removing autonomy**  
 
 ---
 
 ## Who This Is For
 
-This demo is relevant for:
+**Engineering / Platform Teams**
+- Enforce constraints at deployment or commit boundaries  
 
-### Engineering & Platform Teams
+**AI / ML Teams**
+- Control AI-generated actions before execution  
 
-* Enforcing constraints at the commit or deployment boundary  
-* Preventing invalid system changes from reaching production  
+**Compliance / Risk Teams**
+- Enforce separation of duties and accountability  
 
-### AI / ML Teams
-
-* Controlling autonomous or semi-autonomous agent behavior  
-* Ensuring AI-generated actions meet governance requirements  
-
-### Compliance & Risk Teams
-
-* Enforcing separation of duties and accountability rules  
-* Reducing risk in financial or regulated workflows  
-
-### Organizations Deploying AI Systems
-
-* Adding deterministic safeguards before execution  
-* Moving from “monitoring” → **enforcement**  
+**Organizations deploying AI**
+- Move from monitoring → **enforcement**
 
 ---
 
 ## Status
 
-Early-stage demonstration of CRI-CORE enforcement capabilities.
+Demonstration of CRI-CORE as an execution-boundary enforcement layer.
 
 ---
 
