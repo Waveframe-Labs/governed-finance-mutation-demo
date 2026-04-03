@@ -4,10 +4,10 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.6.0"
+version: "0.6.1"
 status: "Active"
 created: "2026-03-19"
-updated: "2026-04-01"
+updated: "2026-04-02"
 
 author:
   name: "Shawn C. Wright"
@@ -20,18 +20,26 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.6.0"
+  - "Finance-Mutation-Demo-Runner-v0.6.1"
 ---
 """
 
 from pathlib import Path
 import json
+import time
 from typing import Any, Dict
 
 from cricore.interface.governed_execute import governed_execute
 
 from scenarios.allowed import build_allowed_proposal
 from scenarios.blocked import build_blocked_proposal
+
+
+# -----------------------------
+# Config
+# -----------------------------
+
+PAUSE = 2
 
 
 # -----------------------------
@@ -120,6 +128,8 @@ def unsafe_execute(run_name: str, proposal_builder) -> Dict[str, Any]:
     print("\nExecution Result:")
     print(execution_result)
 
+    time.sleep(PAUSE)  # Pause after unsafe result
+
     return execution_result
 
 
@@ -168,6 +178,8 @@ def governed_execute_demo(run_name: str, proposal_builder, policy: Dict[str, Any
     print("\nExecution Result:")
     print(governed_result["execution_result"])
 
+    time.sleep(PAUSE)  # Pause BEFORE technical details
+
     print("\n[Technical Details]")
     for stage in governed_result["result"].stage_results:
         status = "PASS" if stage.passed else "FAIL"
@@ -190,15 +202,21 @@ def main():
     print("SCENARIO 1 COMPARISON")
     print("=" * 50)
     print("Unauthorized financial action")
+
     unsafe_execute("blocked-run", build_blocked_proposal)
     blocked_result = governed_execute_demo("blocked-run", build_blocked_proposal, policy)
+
+    time.sleep(PAUSE)  # Pause between scenarios
 
     print("\n" + "=" * 50)
     print("SCENARIO 2 COMPARISON")
     print("=" * 50)
     print("Authorized financial action")
+
     unsafe_execute("allowed-run", build_allowed_proposal)
     allowed_result = governed_execute_demo("allowed-run", build_allowed_proposal, policy)
+
+    time.sleep(PAUSE)  # Pause before final takeaway
 
     print("\n" + "=" * 50)
     print("FINAL TAKEAWAY")
