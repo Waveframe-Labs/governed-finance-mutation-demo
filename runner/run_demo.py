@@ -4,7 +4,7 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.6.4"
+version: "0.6.5"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-04-02"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.6.4"
+  - "Finance-Mutation-Demo-Runner-v0.6.5"
 ---
 """
 
@@ -73,10 +73,8 @@ def describe_scenario(run_name: str) -> dict[str, str]:
 def format_mutation_output(executed: bool, governed: bool) -> str:
     if not executed:
         return "Mutation: not executed"
-
     if governed:
         return "Mutation: $2M reallocated (after validation)"
-
     return "Mutation: $2M reallocated (no validation)"
 
 
@@ -180,6 +178,9 @@ def governed_execute_demo(run_name: str, proposal_builder, policy: Dict[str, Any
         print("- Execution occurred only after CRI-CORE authorization")
         print("- The mutation remained inside the governed path")
         print("\n" + format_mutation_output(executed=True, governed=True))
+
+    # 🔥 NEW: pause BEFORE technical details
+    checkpoint("View Technical Details")
 
     print("\n[Technical Details]")
     for stage in governed_result["result"].stage_results:
