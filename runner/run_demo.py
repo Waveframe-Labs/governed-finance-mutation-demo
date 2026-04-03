@@ -4,7 +4,7 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.6.2"
+version: "0.6.3"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-04-02"
@@ -20,26 +20,18 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.6.2"
+  - "Finance-Mutation-Demo-Runner-v0.6.3"
 ---
 """
 
 from pathlib import Path
 import json
-import time
 from typing import Any, Dict
 
 from cricore.interface.governed_execute import governed_execute
 
 from scenarios.allowed import build_allowed_proposal
 from scenarios.blocked import build_blocked_proposal
-
-
-# -----------------------------
-# Config
-# -----------------------------
-
-PAUSE = 3  # longer pause for readability between major sections
 
 
 # -----------------------------
@@ -56,6 +48,11 @@ CONTRACT_PATH = ROOT_DIR / "contracts" / "finance_policy.json"
 
 def load_policy() -> Dict[str, Any]:
     return json.loads(CONTRACT_PATH.read_text(encoding="utf-8"))
+
+
+def checkpoint(label: str):
+    print(f"\n--- {label} ---")
+    input("Press Enter to continue...\n")
 
 
 def describe_scenario(run_name: str) -> dict[str, str]:
@@ -202,7 +199,7 @@ def main():
     unsafe_execute("blocked-run", build_blocked_proposal)
     blocked_result = governed_execute_demo("blocked-run", build_blocked_proposal, policy)
 
-    time.sleep(PAUSE)  # pause after scenario 1
+    checkpoint("End of Scenario 1")
 
     print("\n" + "=" * 50)
     print("SCENARIO 2 COMPARISON")
@@ -212,7 +209,7 @@ def main():
     unsafe_execute("allowed-run", build_allowed_proposal)
     allowed_result = governed_execute_demo("allowed-run", build_allowed_proposal, policy)
 
-    time.sleep(PAUSE)  # pause after scenario 2
+    checkpoint("End of Scenario 2")
 
     print("\n" + "=" * 50)
     print("FINAL TAKEAWAY")
@@ -226,7 +223,7 @@ def main():
     else:
         print("Demo completed, but one or more scenarios did not produce the expected outcome.")
 
-    time.sleep(PAUSE)  # pause after takeaway
+    checkpoint("End of Demo")
 
 
 if __name__ == "__main__":
