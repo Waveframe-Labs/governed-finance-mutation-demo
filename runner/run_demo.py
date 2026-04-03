@@ -4,7 +4,7 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.6.1"
+version: "0.6.2"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-04-02"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.6.1"
+  - "Finance-Mutation-Demo-Runner-v0.6.2"
 ---
 """
 
@@ -39,7 +39,7 @@ from scenarios.blocked import build_blocked_proposal
 # Config
 # -----------------------------
 
-PAUSE = 2
+PAUSE = 3  # longer pause for readability between major sections
 
 
 # -----------------------------
@@ -128,8 +128,6 @@ def unsafe_execute(run_name: str, proposal_builder) -> Dict[str, Any]:
     print("\nExecution Result:")
     print(execution_result)
 
-    time.sleep(PAUSE)  # Pause after unsafe result
-
     return execution_result
 
 
@@ -178,8 +176,6 @@ def governed_execute_demo(run_name: str, proposal_builder, policy: Dict[str, Any
     print("\nExecution Result:")
     print(governed_result["execution_result"])
 
-    time.sleep(PAUSE)  # Pause BEFORE technical details
-
     print("\n[Technical Details]")
     for stage in governed_result["result"].stage_results:
         status = "PASS" if stage.passed else "FAIL"
@@ -206,7 +202,7 @@ def main():
     unsafe_execute("blocked-run", build_blocked_proposal)
     blocked_result = governed_execute_demo("blocked-run", build_blocked_proposal, policy)
 
-    time.sleep(PAUSE)  # Pause between scenarios
+    time.sleep(PAUSE)  # pause after scenario 1
 
     print("\n" + "=" * 50)
     print("SCENARIO 2 COMPARISON")
@@ -216,7 +212,7 @@ def main():
     unsafe_execute("allowed-run", build_allowed_proposal)
     allowed_result = governed_execute_demo("allowed-run", build_allowed_proposal, policy)
 
-    time.sleep(PAUSE)  # Pause before final takeaway
+    time.sleep(PAUSE)  # pause after scenario 2
 
     print("\n" + "=" * 50)
     print("FINAL TAKEAWAY")
@@ -229,6 +225,8 @@ def main():
         print("It is explicitly authorized or blocked at the mutation boundary.")
     else:
         print("Demo completed, but one or more scenarios did not produce the expected outcome.")
+
+    time.sleep(PAUSE)  # pause after takeaway
 
 
 if __name__ == "__main__":
