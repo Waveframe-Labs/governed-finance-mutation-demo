@@ -4,7 +4,7 @@ title: "Finance Mutation Demo Runner"
 filetype: "source"
 type: "execution"
 domain: "demo"
-version: "0.6.3"
+version: "0.6.4"
 status: "Active"
 created: "2026-03-19"
 updated: "2026-04-02"
@@ -20,7 +20,7 @@ license: "Apache-2.0"
 ai_assisted: "partial"
 
 anchors:
-  - "Finance-Mutation-Demo-Runner-v0.6.3"
+  - "Finance-Mutation-Demo-Runner-v0.6.4"
 ---
 """
 
@@ -68,6 +68,16 @@ def describe_scenario(run_name: str) -> dict[str, str]:
         "action": "AI proposes reallocation with independent approval.",
         "unsafe_outcome": "Funds are reallocated.",
     }
+
+
+def format_mutation_output(executed: bool, governed: bool) -> str:
+    if not executed:
+        return "Mutation: not executed"
+
+    if governed:
+        return "Mutation: $2M reallocated (after validation)"
+
+    return "Mutation: $2M reallocated (no validation)"
 
 
 def execute_mutation(proposal: Dict[str, Any]) -> Dict[str, Any]:
@@ -122,8 +132,7 @@ def unsafe_execute(run_name: str, proposal_builder) -> Dict[str, Any]:
     print("- No admissibility check was performed")
     print("- No execution boundary was enforced")
 
-    print("\nExecution Result:")
-    print(execution_result)
+    print("\n" + format_mutation_output(executed=True, governed=False))
 
     return execution_result
 
@@ -166,12 +175,11 @@ def governed_execute_demo(run_name: str, proposal_builder, policy: Dict[str, Any
     if governed_result["blocked"]:
         print("- Execution did not occur")
         print("- The action was stopped at the mutation boundary")
+        print("\n" + format_mutation_output(executed=False, governed=True))
     else:
         print("- Execution occurred only after CRI-CORE authorization")
         print("- The mutation remained inside the governed path")
-
-    print("\nExecution Result:")
-    print(governed_result["execution_result"])
+        print("\n" + format_mutation_output(executed=True, governed=True))
 
     print("\n[Technical Details]")
     for stage in governed_result["result"].stage_results:
@@ -197,9 +205,10 @@ def main():
     print("Unauthorized financial action")
 
     unsafe_execute("blocked-run", build_blocked_proposal)
-    blocked_result = governed_execute_demo("blocked-run", build_blocked_proposal, policy)
+    checkpoint("Review: Unsafe execution (Scenario 1)")
 
-    checkpoint("End of Scenario 1")
+    blocked_result = governed_execute_demo("blocked-run", build_blocked_proposal, policy)
+    checkpoint("Review: Governed outcome (Scenario 1)")
 
     print("\n" + "=" * 50)
     print("SCENARIO 2 COMPARISON")
@@ -207,9 +216,10 @@ def main():
     print("Authorized financial action")
 
     unsafe_execute("allowed-run", build_allowed_proposal)
-    allowed_result = governed_execute_demo("allowed-run", build_allowed_proposal, policy)
+    checkpoint("Review: Unsafe execution (Scenario 2)")
 
-    checkpoint("End of Scenario 2")
+    allowed_result = governed_execute_demo("allowed-run", build_allowed_proposal, policy)
+    checkpoint("Review: Governed outcome (Scenario 2)")
 
     print("\n" + "=" * 50)
     print("FINAL TAKEAWAY")
