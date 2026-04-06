@@ -1,5 +1,39 @@
 # Changelog
 
+v0.4.0 — Guided Execution Walkthrough + Clean Output
+
+Refined demo into a guided, step-by-step execution walkthrough with controlled pacing and clean output.
+
+### Added
+- Interactive checkpoints (`Press Enter to continue`) for presenter-controlled flow
+- Step-by-step scenario structure:
+  - Unsafe execution → pause
+  - Governed execution → pause
+- Dedicated checkpoint before technical details to separate:
+  - decision-level outcome
+  - enforcement diagnostics
+
+### Changed
+- Replaced raw execution output with human-readable mutation summaries
+- Restructured demo to eliminate scrolling during scenario comparison
+- Improved narrative clarity for terminal-based walkthroughs
+
+### Improved
+- Demo can now be understood in a single pass without prior context
+- Clear separation between:
+  - what happened (EXECUTED / BLOCKED / ALLOWED)
+  - why it happened (validation stages)
+- Suitable for:
+  - video demonstrations
+  - live walkthroughs
+  - non-technical stakeholders
+
+### Notes
+- No changes to enforcement logic
+- Focused on presentation, clarity, and usability
+
+---
+
 ## v0.3.0 — Execution Boundary Demonstration
 
 Refined the governed mutation pipeline demo to align with CRI-CORE execution-boundary enforcement and simplify the demo into a minimal, runnable example.
